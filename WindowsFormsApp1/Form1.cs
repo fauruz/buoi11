@@ -17,6 +17,16 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
         }
+        private string GeneratorId()
+        {
+            string year = DateTime.Now.Year.ToString();
+            string month = DateTime.Now.Month.ToString();
+            string day = DateTime.Now.Day.ToString();
+            string hour = DateTime.Now.Hour.ToString();
+            string minute = DateTime.Now.Minute.ToString();
+            string second = DateTime.Now.Second.ToString();
+            return "NV" + year + month + day + hour + minute + second;
+        }
         private void showData()
         {
             dtgvNV.Rows.Clear();
@@ -29,11 +39,6 @@ namespace WindowsFormsApp1
         }
         private bool FormValidation()
         {
-            if (txtId.Text == string.Empty)
-            {
-                MessageBox.Show("Nhập mã nhân viên!");
-                return false;
-            }
             if (txtName.Text == string.Empty)
             {
                 MessageBox.Show("Nhập tên nhân viên!");
@@ -58,15 +63,17 @@ namespace WindowsFormsApp1
             dtpDOB.Text = null;
             cbbGender.SelectedIndex = -1;
         }
-        private void storeNhanVien(NHANVIEN nv)
+        private NHANVIEN storeNhanVien()
         {
-            nv.MANV = txtId.Text;
+            NHANVIEN nv = new NHANVIEN();
             nv.HOTENNV = txtName.Text;
             nv.NGAYSINH = dtpDOB.Value;
             nv.GIOITINH = cbbGender.Text;
+            return nv;
         }
         private void Form1_Load(object sender, EventArgs e)
         {
+            txtId.ReadOnly = true;
             dtgvNV.Visible = false;
         }
 
@@ -79,11 +86,8 @@ namespace WindowsFormsApp1
         {
             if(FormValidation())
             {
-                NHANVIEN nv = new NHANVIEN();
-                nv.MANV = txtId.Text;
-                nv.HOTENNV = txtName.Text;
-                nv.NGAYSINH = dtpDOB.Value;
-                nv.GIOITINH = cbbGender.Text;
+                NHANVIEN nv = storeNhanVien();
+                nv.MANV = GeneratorId();
                 db.NHANVIENs.InsertOnSubmit(nv);
                 db.SubmitChanges();
                 MessageBox.Show("Thêm thành công nhân viên " + nv.HOTENNV);
@@ -126,7 +130,21 @@ namespace WindowsFormsApp1
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (db.NHANVIENs.Where(s => s.MANV == txtId.Text).Count() == 1)
+            int a = dtgvNV.SelectedRows.Count;
+            if (a > 0)
+            {
+                MessageBox.Show("Xóa thành công " + a + " nhân viên");
+                for(int i = 0; i < a; i++)
+                {
+                    var id = dtgvNV.SelectedRows[i].Cells[0].Value;
+                    NHANVIEN nv = db.NHANVIENs.First(s => s.MANV == id);
+                    db.NHANVIENs.DeleteOnSubmit(nv);
+                    db.SubmitChanges();
+                    showData();
+                    clearForm();
+                }
+            }
+            else if (db.NHANVIENs.Where(s => s.MANV == txtId.Text).Count() == 1)
             {
                 NHANVIEN nv = db.NHANVIENs.First(s => s.MANV == txtId.Text);
                 db.NHANVIENs.DeleteOnSubmit(nv);
